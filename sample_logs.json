@@ -1,0 +1,7 @@
+[
+  { "timestamp": "2025-06-01T10:23:11Z", "src_ip": "192.168.1.104", "dst_ip": "10.0.0.1", "port": 22, "protocol": "TCP", "event": "SSH brute force", "severity": "HIGH", "count": 312 },
+  { "timestamp": "2025-06-01T10:24:05Z", "src_ip": "203.0.113.42", "dst_ip": "10.0.0.5", "port": 80, "protocol": "TCP", "event": "SQL injection attempt", "severity": "CRITICAL", "count": 1 },
+  { "timestamp": "2025-06-01T10:25:30Z", "src_ip": "198.51.100.7", "dst_ip": "10.0.0.1", "port": 443, "protocol": "TCP", "event": "Port scan", "severity": "MEDIUM", "count": 48 },
+  { "timestamp": "2025-06-01T10:26:14Z", "src_ip": "10.0.0.88", "dst_ip": "8.8.8.8", "port": 53, "protocol": "UDP", "event": "DNS tunneling", "severity": "HIGH", "count": 5 },
+  { "timestamp": "2025-06-01T10:27:00Z", "src_ip": "192.168.1.200", "dst_ip": "10.0.0.3", "port": 3389, "protocol": "TCP", "event": "RDP login failure", "severity": "MEDIUM", "count": 67 }
+]
