@@ -1,0 +1,18 @@
+import os
+import unittest
+
+def discover_tests():
+    test_dir = 'tests'
+    return unittest.defaultTestLoader.discover(
+        test_dir,
+        pattern='test_*.py',
+        exclude=['*_pyc']
+    )
+
+def runTests():
+    suite = discover_tests()
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
+
+if __name__ == '__main__':
+    runTests()
