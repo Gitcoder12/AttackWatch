@@ -1,12 +1,15 @@
 from typing import List, Optional
-import datetime
+
+from models.log_entry import LogEntry
+
 
 class FailedLogin:
     def __init__(self, source_ip: str, count: int):
         self.source_ip = source_ip
         self.count = count
 
-def detect_failed_logins(log_entries: List[Optional['LogEntry']]) -> List[FailedLogin]:
+
+def detect_failed_logins(log_entries: List[Optional[LogEntry]]) -> List[FailedLogin]:
     failed_logins = {}
     for entry in log_entries:
         if entry and entry.event_type == 'login_failure':

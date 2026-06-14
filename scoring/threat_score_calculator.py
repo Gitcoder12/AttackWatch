@@ -1,32 +1,38 @@
-from typing import List, Optional
-import sys
-from datetime import datetime
+from dataclasses import dataclass
+from typing import List
 
-# Import your classes from other modules
-from ..parser.log_parser import parse_logs
-from ..detection.fail_login_detector import detect_failed_logins
-from ..scoring.threat_score_calculator import calculate_threat_scores
+from detection.fail_login_detector import FailedLogin
 
-def main(log_file_path: str):
-    with open(log_file_path, 'r') as file:
-        logs = json.load(file)
-    
-    log_entries = parse_logs(logs)
-    failed_logins = detect_failed_logins(log_entries)
-    threat_scores = calculate_threat_scores(failed_logins)
 
-    print(f"Failed Logins:")
+@dataclass
+class ThreatScore:
+    source_ip: str
+    score: int
+    severity: str
+
+
+def get_severity(score: int) -> str:
+    if score >= 80:
+        return "CRITICAL"
+    if score >= 60:
+        return "HIGH"
+    if score >= 30:
+        return "MEDIUM"
+    return "LOW"
+
+
+def calculate_threat_scores(failed_logins: List[FailedLogin]) -> List[ThreatScore]:
+    results = []
+
     for login in failed_logins:
-        print(f"  Source IP: {login.source_ip}, Count: {login.count}")
+        score = min(login.count * 20, 100)
 
-    print("\nThreat Scores:")
-    for score in threat_scores:
-        print(f"  Source IP: {score.source_ip}, Score: {score.score}")
+        results.append(
+            ThreatScore(
+                source_ip=login.source_ip,
+                score=score,
+                severity=get_severity(score),
+            )
+        )
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python cli_dashboard.py path/to/logfile.json")
-        sys.exit(1)
-    
-    log_file_path = sys.argv[1]
-    main(log_file_path)
+    return results
