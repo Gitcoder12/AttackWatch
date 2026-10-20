@@ -1,0 +1,116 @@
+{
+  "alerts": [
+    {
+      "rule": "SSH Brute Force",
+      "ip": "203.0.113.42",
+      "severity": "HIGH",
+      "detail": "132 events on port 22",
+      "count": 132,
+      "ports": [
+        22
+      ]
+    },
+    {
+      "rule": "Port Scan Detection",
+      "ip": "192.0.2.88",
+      "severity": "MEDIUM",
+      "detail": "17 distinct ports contacted",
+      "count": 17,
+      "ports": [
+        21,
+        22,
+        25,
+        110,
+        139,
+        143,
+        443,
+        445,
+        3306,
+        3389,
+        5432,
+        5900,
+        6379,
+        8080,
+        9200,
+        11211,
+        27017
+      ]
+    },
+    {
+      "rule": "DNS Tunneling",
+      "ip": "10.0.0.88",
+      "severity": "HIGH",
+      "detail": "62 events on port 53",
+      "count": 62,
+      "ports": [
+        53
+      ]
+    },
+    {
+      "rule": "RDP Brute Force",
+      "ip": "203.0.113.99",
+      "severity": "MEDIUM",
+      "detail": "28 events on port 3389",
+      "count": 28,
+      "ports": [
+        3389
+      ]
+    },
+    {
+      "rule": "Ssh Login Failure",
+      "ip": "203.0.113.42",
+      "severity": "HIGH",
+      "detail": "count=87 port=22",
+      "count": 87,
+      "ports": [
+        22
+      ]
+    },
+    {
+      "rule": "Dns Tunneling",
+      "ip": "10.0.0.88",
+      "severity": "HIGH",
+      "detail": "count=62 port=53",
+      "count": 62,
+      "ports": [
+        53
+      ]
+    },
+    {
+      "rule": "Rdp Login Failure",
+      "ip": "203.0.113.99",
+      "severity": "MEDIUM",
+      "detail": "count=28 port=3389",
+      "count": 28,
+      "ports": [
+        3389
+      ]
+    }
+  ],
+  "scores": [
+    {
+      "ip": "203.0.113.42",
+      "score": 95,
+      "severity": "CRITICAL",
+      "alerts": 2
+    },
+    {
+      "ip": "10.0.0.88",
+      "score": 92,
+      "severity": "CRITICAL",
+      "alerts": 2
+    },
+    {
+      "ip": "203.0.113.99",
+      "score": 60,
+      "severity": "HIGH",
+      "alerts": 2
+    },
+    {
+      "ip": "192.0.2.88",
+      "score": 51,
+      "severity": "MEDIUM",
+      "alerts": 1
+    }
+  ]
+}
