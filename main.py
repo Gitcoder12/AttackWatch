@@ -1,101 +1,141 @@
+"""AttackWatch command-line pipeline for rule-based log analysis."""
+
+from __future__ import annotations
+
+import argparse
 import json
 import logging
 import os
-from dotenv import load_dotenv
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
 
-# Import your internal modules (adjust these paths if your class names differ)
-from parser.log_parser import LogParser
-from detection.engine import DetectionEngine
-from scoring.risk_scorer import RiskScorer
-from geoip import GeoIPLookup
-from alerter import AlertSystem
+from alerter import send_webhook
+from detection.engine import detect
+from geoip import lookup as geoip_lookup
+from parser.log_parser import parse_logs
+from scoring.threat_score_calculator import calculate_threat_scores
 
-# 1. Setup Professional Logging (No more print statements)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("attackwatch.log"),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger("AttackWatch")
+ROOT = Path(__file__).resolve().parent
+LOGGER = logging.getLogger("AttackWatch")
 
-def load_json(filepath: str) -> dict:
-    """Utility to safely load JSON files."""
+
+def load_json(path: str | Path) -> Any:
+    """Load JSON from an absolute path or a path relative to the repository root."""
+    candidate = Path(path)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    with candidate.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def run_pipeline(
+    logs_path: str | Path = "sample_logs.json",
+    rules_path: str | Path = "rules.json",
+    output_path: str | Path = "report.json",
+    *,
+    enable_geoip: bool = False,
+    webhook_url: str | None = None,
+) -> dict[str, Any]:
+    """Parse logs, apply rules, score threats, and write a JSON report."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
+    raw_document = load_json(logs_path)
+    if isinstance(raw_document, dict):
+        raw_logs = raw_document.get("logs", [])
+    elif isinstance(raw_document, list):
+        raw_logs = raw_document
+    else:
+        raise ValueError("Log input must be a JSON object containing 'logs' or a JSON array.")
+
+    rules_document = load_json(rules_path)
+    rules = rules_document.get("rules", []) if isinstance(rules_document, dict) else rules_document
+    if not isinstance(rules, list):
+        raise ValueError("Rules input must be a JSON array or an object with a 'rules' array.")
+
+    entries = parse_logs(raw_logs)
+    alerts = detect(entries, rules)
+    scores = calculate_threat_scores(alerts)
+
+    score_rows = []
+    for score in scores:
+        row = asdict(score)
+        if enable_geoip:
+            row["location"] = geoip_lookup(score.source_ip)
+        score_rows.append(row)
+
+    report = {
+        "summary": {
+            "input_records": len(raw_logs),
+            "parsed_records": len(entries),
+            "alerts": len(alerts),
+            "scored_sources": len(scores),
+        },
+        "alerts": [asdict(alert) for alert in alerts],
+        "scores": score_rows,
+    }
+
+    if webhook_url:
+        report["webhook_sent"] = send_webhook(webhook_url, alerts)
+
+    destination = Path(output_path)
+    if not destination.is_absolute():
+        destination = ROOT / destination
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+    LOGGER.info(
+        "Pipeline complete: %d records parsed, %d alerts, %d scored sources.",
+        len(entries),
+        len(alerts),
+        len(scores),
+    )
+    LOGGER.info("Report written to %s", destination)
+    return report
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Build the CLI argument parser."""
+    parser = argparse.ArgumentParser(description="Analyze JSON network logs with AttackWatch rules.")
+    parser.add_argument("logs", nargs="?", default="sample_logs.json", help="Input log JSON file.")
+    parser.add_argument("rules", nargs="?", default="rules.json", help="Detection rules JSON file.")
+    parser.add_argument(
+        "--geo",
+        action="store_true",
+        help="Enrich scored source IPs with optional GeoIP lookups.",
+    )
+    parser.add_argument(
+        "--webhook",
+        default=os.getenv("ATTACKWATCH_WEBHOOK"),
+        help="Optional Discord-compatible webhook URL (or ATTACKWATCH_WEBHOOK env var).",
+    )
+    parser.add_argument(
+        "--json-out",
+        default="report.json",
+        help="Path for the JSON report (default: report.json).",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point."""
+    args = build_parser().parse_args(argv)
     try:
-        with open(filepath, 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        logger.error(f"File not found: {filepath}")
-        return {}
-    except json.JSONDecodeError:
-        logger.error(f"Error decoding JSON from: {filepath}")
-        return {}
+        run_pipeline(
+            args.logs,
+            args.rules,
+            args.json_out,
+            enable_geoip=args.geo,
+            webhook_url=args.webhook,
+        )
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        LOGGER.error("Could not complete analysis: %s", exc)
+        return 2
+    return 0
 
-def run_pipeline():
-    logger.info("🚀 Starting AttackWatch Threat Intelligence Pipeline...")
-    load_dotenv() # Load API keys from .env
-
-    # 2. Load Data & Configurations
-    raw_logs = load_json('sample_logs.json').get('logs', [])
-    rules = load_json('rules.json')
-    
-    if not raw_logs:
-        logger.warning("No logs found to process. Exiting.")
-        return
-
-    # 3. Initialize Engine Components
-    parser = LogParser()
-    detector = DetectionEngine(rules=rules)
-    scorer = RiskScorer()
-    geo = GeoIPLookup()
-    alerter = AlertSystem()
-
-    final_report = []
-    threats_detected = 0
-
-    # 4. Run the Pipeline
-    for log in raw_logs:
-        try:
-            # Step A: Parse
-            parsed_event = parser.parse(log)
-            
-            # Step B: Detect
-            threat = detector.detect(parsed_event)
-            if not threat:
-                continue # Skip safe events
-                
-            threats_detected += 1
-            
-            # Step C: Enrich (GeoIP)
-            geo_data = geo.lookup(threat.source_ip)
-            threat.location = geo_data.get('country', 'Unknown')
-            
-            # Step D: Score
-            risk_score = scorer.calculate_score(threat)
-            threat.risk_score = risk_score
-            
-            # Step E: Alert (If critical)
-            if risk_score >= 80:
-                logger.warning(f"🚨 CRITICAL THREAT DETECTED: {threat.source_ip} | Score: {risk_score}")
-                alerter.send_alert(threat)
-            
-            # Add to final report
-            final_report.append(threat.to_dict())
-            
-        except Exception as e:
-            # Error handling: One bad log shouldn't crash the whole system
-            logger.error(f"Failed to process log entry: {e}")
-            continue
-
-    # 5. Save Output
-    try:
-        with open('report.json', 'w') as f:
-            json.dump({"total_threats": threats_detected, "threats": final_report}, f, indent=4)
-        logger.info(f"✅ Pipeline complete. {threats_detected} threats saved to report.json.")
-    except Exception as e:
-        logger.error(f"Failed to save report: {e}")
 
 if __name__ == "__main__":
-    run_pipeline()
+    raise SystemExit(main())
