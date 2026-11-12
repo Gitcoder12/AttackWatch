@@ -31,9 +31,9 @@ class ThreatScore:
 def calculate_threat_scores(alerts: Iterable[Any]) -> list[ThreatScore]:
     """Return descending per-IP scores.
 
-    Detection alerts use their declared severity plus bounded alert/count bonuses.
+    Rule alerts use their declared severity plus bounded alert/count bonuses.
     Legacy FailedLogin summaries, which have no severity field, use a simple
-    count-based score (20 points per event) to preserve the original API contract.
+    count-based score (20 points per event) for compatibility with that API.
     """
     grouped: dict[str, list[Any]] = {}
     for alert in alerts:
