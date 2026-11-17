@@ -98,3 +98,21 @@ This section supplements the maintainer-authored README above. The original text
 - Mark unverified sources, identifiers, metrics, benchmark results and external claims as unknown/unverified rather than guessing.
 - Verify setup, execution, tests and public claims against the exact current commit before using this repository in a job, research or academic application.
 - See [MODEL_AUDIT_ROUTER.md](MODEL_AUDIT_ROUTER.md) for independent model review instructions and the merge gate.
+
+---
+
+## Engineering Audit & Handover — 2026-11-17
+
+**Review scope:** default branch `main`; static inspection of `main.py` and `alerter.py`. Runtime tests were not executed.
+
+### Confirmed findings
+- The pipeline accepts JSON logs and rules, parses them, applies detection rules, scores alerts, and writes a JSON report. The actual detection quality depends on the configured rules and parser; it is not an independently validated intrusion-detection model.
+- The optional webhook sender posts alert details to the supplied URL with a 10-second timeout. Treat webhook URLs as secrets and avoid including sensitive log contents in external notifications.
+- The report and webhook behavior were inspected, but no test run or real-world detection evaluation was performed in this audit.
+
+### Next actions
+1. Add schema validation and adversarial fixtures for malformed, oversized, and unexpected log records/rules.
+2. Add tests for every detection rule, scoring boundaries, webhook success/failure, and report output.
+3. Document false-positive/false-negative limitations and keep sample log results separate from measured security effectiveness.
+
+**Verification status:** static source inspection only; CLI execution, test suite, GeoIP integration, and detection precision/recall remain unverified.
