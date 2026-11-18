@@ -116,3 +116,22 @@ This section supplements the maintainer-authored README above. The original text
 3. Document false-positive/false-negative limitations and keep sample log results separate from measured security effectiveness.
 
 **Verification status:** static source inspection only; CLI execution, test suite, GeoIP integration, and detection precision/recall remain unverified.
+
+
+---
+
+## Branch Activity & Development History
+
+**Audit date:** 2026-11-18 · **Comparison base:** `main`
+
+| Branch | Difference from `main` | Observed work / changed paths |
+|---|---:|---|
+| `docs/portfolio-operating-kit-2026-11-13` | 5 ahead / 4 behind | Activity log, agent guidance, worklog, company-fit notes, feature plan and skills; README has additions and removals |
+| `docs/project-status-audit20261116` | Comparison unavailable | GitHub returned 404 for the comparison; recheck branch existence |
+| `docs/status-inventory-2026-11-16-v1` | 1 / 1 | Project status inventory: `PROJECT_STATUS.md` |
+
+### Open pull requests observed during this audit
+
+- [PR #3 — project status snapshot](https://github.com/Gitcoder12/AttackWatch/pull/3)
+
+**Review note:** The portfolio branch removes README content as well as adding docs. Inspect its diff before merging. No branches have been merged or deleted by this documentation update.
