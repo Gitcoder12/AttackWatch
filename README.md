@@ -116,3 +116,10 @@ This section supplements the maintainer-authored README above. The original text
 3. Document false-positive/false-negative limitations and keep sample log results separate from measured security effectiveness.
 
 **Verification status:** static source inspection only; CLI execution, test suite, GeoIP integration, and detection precision/recall remain unverified.
+
+---
+
+## Examples Used
+- Detecting repeated SSH login failures
+- Identifying a port-scan pattern in network logs
+- Flagging SQL-injection-like events
