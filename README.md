@@ -123,3 +123,27 @@ This section supplements the maintainer-authored README above. The original text
 - Detecting repeated SSH login failures
 - Identifying a port-scan pattern in network logs
 - Flagging SQL-injection-like events
+
+
+---
+
+## Comparison with Existing Open-Source Projects
+
+AttackWatch is a lightweight network-log analysis CLI that parses events, applies configurable detection rules, scores alerts and optionally sends notifications. The following projects are established defensive-security references with different levels of scope.
+
+| Project | Established focus | Relationship to AttackWatch |
+|---|---|---|
+| [Wazuh](https://github.com/wazuh/wazuh) | Security monitoring, endpoint detection, log analysis and alerting platform | Much broader security platform with agents, rules and centralized operations; AttackWatch is a small local log-to-report workflow. |
+| [Zeek](https://github.com/zeek/zeek) | Network security monitoring and rich network-event analysis | A mature network-analysis framework; AttackWatch currently evaluates supplied log records rather than operating as a full network sensor. |
+| [Sigma](https://github.com/SigmaHQ/sigma) | Generic, shareable detection-rule format for SIEM systems | A useful rule portability reference; AttackWatch's documented custom JSON rules are narrower and should not claim Sigma compatibility unless implemented. |
+
+### Where AttackWatch is different
+- **Small CLI workflow:** the README describes a direct local pipeline from JSON logs to alerts and a report, without requiring a central SIEM deployment.
+- **Readable rule triggers:** example detections such as brute-force patterns and port-scan indicators are exposed in a compact format.
+- **Optional integrations:** GeoIP enrichment and webhook notification are optional rather than mandatory services.
+
+### Where established projects are stronger
+Wazuh and Zeek provide much broader telemetry, rule ecosystems, operational integrations and mature security workflows. Sigma has a standardized cross-tool detection ecosystem. AttackWatch is not a replacement for an EDR, SIEM, NDR or independently validated intrusion-detection system.
+
+### Evidence and security limitations
+Detection quality depends on input coverage, rule definitions and thresholds. Add precision/recall evaluation against labelled logs, parser/schema validation and adversarial tests. Treat webhook URLs as secrets and avoid sending sensitive log contents to third parties. This comparison is a scope note, not a detection-performance claim.
